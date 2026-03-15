@@ -5,6 +5,7 @@ import { formatNumber, formatCurrency, isValidDate } from '../utils/format.js'
 import { PAGINATION, ERROR_MESSAGES } from '../constants.js'
 
 
+const MIN_LENGTH = 2
 const MIN_WEIGHT = 0.01
 const MAX_WEIGHT = 10000
 const MIN_DIMENSION = 0.1
@@ -19,7 +20,7 @@ function calculateVolume(length, width, height) {
 
 function validateProduct(product) {
   const errors = []
-  if (!product.name || product.name.trim().length < 2) {
+  if (!product.name || product.name.trim().length < MIN_LENGTH) {
     errors.push('Название должно содержать минимум 2 символа')
   }
   if (product.weight < MIN_WEIGHT || product.weight > MAX_WEIGHT) {

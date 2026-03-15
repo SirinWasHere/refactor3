@@ -11,6 +11,7 @@ const MAX_PRODUCTS_PER_POINT = 50
 const MIN_DELIVERY_WINDOW_HOURS = 2
 const DEFAULT_TIME_WINDOW = { start: '09:00', end: '18:00' }
 const MOSCOW_COORDS = { lat: 55.7558, lon: 37.6173 }
+const EARTH_RADIUS = 6371
 
 
 function validateCoordinates(lat, lon) {
@@ -42,7 +43,7 @@ function createDeliveryPoint(seq = 1) {
 
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371 // Earth's radius in km
+  const R = EARTH_RADIUS
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLon = (lon2 - lon1) * Math.PI / 180
   const a =

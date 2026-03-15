@@ -7,6 +7,7 @@ import { formatDate, isValidDate, calculateDateDiff } from '../utils/format.js'
 const MAX_LOGIN_ATTEMPTS = 5
 const LOCKOUT_DURATION = 300000
 const MIN_PASSWORD_LENGTH = 6
+const MIN_LOGIN_LENGTH = 3
 
 function validatePassword(password) {
   if (password.length < MIN_PASSWORD_LENGTH) {
@@ -17,7 +18,7 @@ function validatePassword(password) {
 
 function validateLoginForm(login, password) {
   const errors = []
-  if (!login || login.length < 3) {
+  if (!login || login.length < MIN_LOGIN_LENGTH) {
     errors.push('Логин должен содержать минимум 3 символа')
   }
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
@@ -40,7 +41,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
 
   const isFormValid = useMemo(() => {
-    return form.login.length >= 3 && form.password.length >= MIN_PASSWORD_LENGTH
+    return form.login.length >= MIN_LOGIN_LENGTH && form.password.length >= MIN_PASSWORD_LENGTH
   }, [form.login, form.password])
 
   const checkLockout = useCallback(() => {
