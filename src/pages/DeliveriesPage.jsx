@@ -42,7 +42,7 @@ function createDeliveryPoint(seq = 1) {
 
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371 // Earth's radius in km
+  const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLon = (lon2 - lon1) * Math.PI / 180
   const a =
@@ -105,7 +105,7 @@ const initialFormExtended = {
   points: [createPoint(1)]
 }
 
-// Хелперы для массовой генерации
+
 const createGenerationPoint = (seq = 1) => ({
   sequence: seq,
   latitude: '',
@@ -122,7 +122,7 @@ const createGenerationDate = () => ({
   deliveries: [createGenerationDelivery()]
 })
 
-// Хелперы для расчета маршрута
+
 const createRoutePoint = () => ({
   latitude: '',
   longitude: ''
@@ -152,12 +152,10 @@ export default function DeliveriesPage() {
 
   const [selectedDelivery, setSelectedDelivery] = useState(null)
 
-  // Массовая генерация - структурированные данные
   const [generationDates, setGenerationDates] = useState([createGenerationDate()])
   const [generationResult, setGenerationResult] = useState(null)
   const [generationError, setGenerationError] = useState(null)
 
-  // Расчет маршрута - структурированные данные
   const [routePoints, setRoutePoints] = useState([createRoutePoint(), createRoutePoint()])
   const [routeResult, setRouteResult] = useState(null)
   const [routeError, setRouteError] = useState(null)
@@ -366,7 +364,6 @@ export default function DeliveriesPage() {
     setFilters({ date: '', courier_id: '', status: '' })
   }
 
-  // === Функции для массовой генерации ===
   const addGenerationDate = () => {
     setGenerationDates((prev) => [...prev, createGenerationDate()])
   }
