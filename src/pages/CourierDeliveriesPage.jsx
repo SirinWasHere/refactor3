@@ -1,14 +1,11 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi } from '../api/endpoints.js'
-import { DELIVERY_STATUSES, DELIVERY_STATUS_MAP, ERROR_MESSAGES } from '../constants.js'
+import { DELIVERY_STATUSES, DELIVERY_STATUS_MAP, ERROR_MESSAGES, AUTO_REFRESH_INTERVAL, MAX_DELIVERIES_DISPLAY, NOTIFICATION_SOUND } from '../constants.js'
 import DeliveryDetails from '../components/deliveries/DeliveryDetails.jsx'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatTime, formatTimestamp, calculateDateDiff, isValidDate } from '../utils/format.js'
 
 
-const AUTO_REFRESH_INTERVAL = 60000
-const MAX_DELIVERIES_DISPLAY = 50
-const NOTIFICATION_SOUND = '/sounds/notification.mp3'
 
 
 function getStatusColor(status) {

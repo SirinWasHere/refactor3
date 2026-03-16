@@ -2,12 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatTimestamp, formatCurrency, calculateDateDiff } from '../utils/format.js'
-import { DELIVERY_STATUS_MAP, FEATURES, APP_NAME } from '../constants.js'
-
-
-const REFRESH_INTERVAL = 30000
-const MAX_RECENT_ITEMS = 5
-const CHART_COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#F44336']
+import { DELIVERY_STATUS_MAP, FEATURES, APP_NAME, REFRESH_INTERVAL, MAX_RECENT_ITEMS, CHART_COLORS } from '../constants.js'
 
 
 function groupByStatus(items) {

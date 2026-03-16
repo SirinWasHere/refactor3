@@ -2,29 +2,8 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatNumber, formatDate, calculateDateDiff } from '../utils/format.js'
-import { PATTERNS, FEATURES } from '../constants.js'
+import { PATTERNS, FEATURES, LICENSE_PLATE_REGEX, MIN_WEIGHT_CAPACITY, MAX_WEIGHT_CAPACITY, MIN_VOLUME_CAPACITY, MAX_VOLUME_CAPACITY, VEHICLE_TYPES, VEHICLE_STATUSES } from '../constants.js'
 
-
-const LICENSE_PLATE_REGEX = /^[A-Z]\d{3}[A-Z]{2}\d{2,3}$/
-const MIN_WEIGHT_CAPACITY = 100
-const MAX_WEIGHT_CAPACITY = 50000
-const MIN_VOLUME_CAPACITY = 1
-const MAX_VOLUME_CAPACITY = 100
-
-
-const VEHICLE_TYPES = [
-  { value: 'van', label: 'Фургон', maxWeight: 1500 },
-  { value: 'truck', label: 'Грузовик', maxWeight: 10000 },
-  { value: 'trailer', label: 'Прицеп', maxWeight: 20000 }
-]
-
-
-const VEHICLE_STATUSES = {
-  AVAILABLE: 'available',
-  IN_USE: 'in_use',
-  MAINTENANCE: 'maintenance',
-  RETIRED: 'retired'
-}
 
 
 function validateLicensePlate(plate) {

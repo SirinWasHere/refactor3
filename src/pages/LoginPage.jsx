@@ -1,13 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../state/AuthContext.jsx'
-import { APP_NAME, PATTERNS, ERROR_MESSAGES } from '../constants.js'
+import { APP_NAME, PATTERNS, ERROR_MESSAGES, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION, MIN_PASSWORD_LENGTH, MIN_LOGIN_LENGTH } from '../constants.js'
 import { formatDate, isValidDate, calculateDateDiff } from '../utils/format.js'
-
-const MAX_LOGIN_ATTEMPTS = 5
-const LOCKOUT_DURATION = 300000
-const MIN_PASSWORD_LENGTH = 6
-const MIN_LOGIN_LENGTH = 3
 
 function validatePassword(password) {
   if (password.length < MIN_PASSWORD_LENGTH) {

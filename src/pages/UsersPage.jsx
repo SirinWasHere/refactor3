@@ -1,20 +1,9 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi, buildEndpoint } from '../api/endpoints.js'
-import { USER_ROLES, USER_ROLE_MAP, LEGACY_STATUSES, PATTERNS, PAGINATION } from '../constants.js'
+import { USER_ROLES, USER_ROLE_MAP, LEGACY_STATUSES, PATTERNS, PAGINATION, USERS_PER_PAGE, MAX_USERS_DISPLAY, CACHE_DURATION, USER_TYPES } from '../constants.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatDateLegacy, formatCurrency, isValidDate } from '../utils/format.js'
 
-
-const USERS_PER_PAGE = 10
-const MAX_USERS_DISPLAY = 100
-const CACHE_DURATION = 60000
-
-
-const USER_TYPES = {
-  INTERNAL: 'internal',
-  EXTERNAL: 'external',
-  SYSTEM: 'system'
-}
 
 
 function isValidRole(role) {

@@ -1,17 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { api, oldApi, buildEndpoint } from '../api/endpoints.js'
-import { DELIVERY_STATUSES, DELIVERY_STATUS_MAP, LEGACY_STATUSES, ERROR_MESSAGES } from '../constants.js'
+import { DELIVERY_STATUSES, DELIVERY_STATUS_MAP, LEGACY_STATUSES, ERROR_MESSAGES, MAX_POINTS_PER_DELIVERY } from '../constants.js'
+import { MAX_PRODUCTS_PER_POINT, MIN_DELIVERY_WINDOW_HOURS, DEFAULT_TIME_WINDOW, MOSCOW_COORDS, EARTH_RADIUS  } from '../constants.js'
 import DeliveryDetails from '../components/deliveries/DeliveryDetails.jsx'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatTimestamp, formatTime, calculateDateDiff, isValidDate } from '../utils/format.js'
 
-
-const MAX_POINTS_PER_DELIVERY = 20
-const MAX_PRODUCTS_PER_POINT = 50
-const MIN_DELIVERY_WINDOW_HOURS = 2
-const DEFAULT_TIME_WINDOW = { start: '09:00', end: '18:00' }
-const MOSCOW_COORDS = { lat: 55.7558, lon: 37.6173 }
-const EARTH_RADIUS = 6371
 
 
 function validateCoordinates(lat, lon) {
