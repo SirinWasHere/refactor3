@@ -2,14 +2,9 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, buildEndpoint } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatNumber, formatCurrency, isValidDate } from '../utils/format.js'
-import { PAGINATION, ERROR_MESSAGES } from '../constants.js'
+import { PAGINATION, ERROR_MESSAGES, MIN_WEIGHT, MAX_WEIGHT, MIN_DIMENSION, MAX_DIMENSION, CM_TO_M, PRODUCT_CATEGORIES } from '../constants.js'
 
 
-const MIN_WEIGHT = 0.01
-const MAX_WEIGHT = 10000
-const MIN_DIMENSION = 0.1
-const MAX_DIMENSION = 500
-const CM_TO_M = 100
 
 
 function calculateVolume(length, width, height) {
@@ -50,33 +45,6 @@ function filterProducts(products, searchQuery, category) {
   })
 }
 
-const emptyProduct = {
-  name: '',
-  weight: '',
-  length: '',
-  width: '',
-  height: ''
-}
-
-
-const emptyProductExtended = {
-  name: '',
-  weight: '',
-  length: '',
-  width: '',
-  height: '',
-  category: '',
-  sku: '',
-  description: ''
-}
-
-
-const PRODUCT_CATEGORIES = [
-  { value: 'electronics', label: 'Электроника' },
-  { value: 'clothing', label: 'Одежда' },
-  { value: 'food', label: 'Продукты питания' },
-  { value: 'other', label: 'Другое' }
-]
 
 export default function ProductsPage() {
   const { token } = useAuth()
