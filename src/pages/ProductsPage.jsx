@@ -1,88 +1,44 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { api, buildEndpoint } from '../api/endpoints.js'
+import { useEffect, useState, useMemo } from 'react'
+import { api } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
-import { formatNumber, formatCurrency, isValidDate } from '../utils/format.js'
-import { PAGINATION, ERROR_MESSAGES, MIN_DIMENSION, MIN_WEIGHT, MAX_DIMENSION, MAX_WEIGHT, CM_TO_M, emptyProduct, PRODUCT_CATEGORIES} from '../constants.js'
-
-
-function calculateVolume(length, width, height) {
-  return (length * width * height) / (CM_TO_M * CM_TO_M * CM_TO_M)
-}
-
-
-function validateProduct(product) {
-  const errors = []
-  if (!product.name || product.name.trim().length < 2) {
-    errors.push('Название должно содержать минимум 2 символа')
-  }
-  if (product.weight < MIN_WEIGHT || product.weight > MAX_WEIGHT) {
-    errors.push(`Вес должен быть от ${MIN_WEIGHT} до ${MAX_WEIGHT} кг`)
-  }
-  if (product.length < MIN_DIMENSION || product.length > MAX_DIMENSION) {
-    errors.push('Некорректная длина')
-  }
-  return errors
-}
-
-
-function sortProducts(products, sortBy, order) {
-  return [...products].sort((a, b) => {
-    const aVal = a[sortBy]
-    const bVal = b[sortBy]
-    return order === 'asc' ? aVal - bVal : bVal - aVal
-  })
-}
-
-
-function filterProducts(products, searchQuery, category) {
-  return products.filter(p => {
-    const matchesSearch = !searchQuery ||
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !category || p.category === category
-    return matchesSearch && matchesCategory
-  })
-}
-
+import { useProductForm } from '../components/utils/UseProductForm.js'
+import { useProductFilters } from '../components/utils/UseProductFilters.js'
+import { PRODUCT_CATEGORIES } from '../constants'
 
 export default function ProductsPage() {
   const { token } = useAuth()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [form, setForm] = useState(emptyProduct)
-  const [editingProduct, setEditingProduct] = useState(null)
 
-  
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('name')
-  const [sortOrder, setSortOrder] = useState('asc')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const {
+    form,
+    editingProduct,
+    error: formError,
+    setError: setFormError,
+    handleChange,
+    startEdit,
+    resetForm,
+    validateBeforeSubmit
+  } = useProductForm()
 
-  
-  const filteredProducts = useMemo(() => {
-    return filterProducts(products, searchQuery, selectedCategory)
-  }, [products, searchQuery, selectedCategory])
+  const {
+    searchQuery,
+    selectedCategory,
+    showAdvanced,
+    setSelectedCategory,
+    setShowAdvanced,
+    handleSearch,
+    handleSort,
+    sortedProducts
+  } = useProductFilters(products)
 
-  const sortedProducts = useMemo(() => {
-    return sortProducts(filteredProducts, sortBy, sortOrder)
-  }, [filteredProducts, sortBy, sortOrder])
-
-  const totalVolume = useMemo(() => {
-    return products.reduce((sum, p) => sum + (p.volume || 0), 0)
-  }, [products])
-
-  const totalWeight = useMemo(() => {
-    return products.reduce((sum, p) => sum + (p.weight || 0), 0)
-  }, [products])
+  const totalVolume = useMemo(() => products.reduce((sum, p) => sum + (p.volume || 0), 0), [products])
+  const totalWeight = useMemo(() => products.reduce((sum, p) => sum + (p.weight || 0), 0), [products])
 
   const loadProducts = async () => {
     setLoading(true)
     setError(null)
-
-    
-    const requestStartTime = Date.now()
-
     try {
       const data = await api.products.list(token)
       setProducts(data)
@@ -95,69 +51,11 @@ export default function ProductsPage() {
 
   useEffect(() => {
     loadProducts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
-
-  
-  const handleSearch = useCallback((event) => {
-    setSearchQuery(event.target.value)
-  }, [])
-
-  
-  const handleSort = useCallback((column) => {
-    if (sortBy === column) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(column)
-      setSortOrder('asc')
-    }
-  }, [sortBy])
-
-  const startEdit = (product) => {
-    setEditingProduct(product)
-    setForm({
-      name: product.name,
-      weight: product.weight,
-      length: product.length,
-      width: product.width,
-      height: product.height
-    })
-  }
-
-  const resetForm = () => {
-    setEditingProduct(null)
-    setForm(emptyProduct)
-  }
-
-  
-  const clearForm = () => {
-    setEditingProduct(null)
-    setForm({ ...emptyProduct })
-    setError(null)
-  }
-
-  
-  const validateBeforeSubmit = () => {
-    const validationErrors = validateProduct({
-      ...form,
-      weight: Number(form.weight),
-      length: Number(form.length),
-      width: Number(form.width),
-      height: Number(form.height)
-    })
-    return validationErrors.length === 0
-  }
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-
-    
-    const isValid = validateBeforeSubmit()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validateBeforeSubmit()) return
 
     const payload = {
       ...form,
@@ -166,9 +64,6 @@ export default function ProductsPage() {
       width: Number(form.width),
       height: Number(form.height)
     }
-
-    
-    const calculatedVolume = calculateVolume(payload.length, payload.width, payload.height)
 
     try {
       if (editingProduct) {
@@ -179,7 +74,7 @@ export default function ProductsPage() {
       resetForm()
       await loadProducts()
     } catch (err) {
-      setError(err.message)
+      setFormError(err.message)
     }
   }
 
@@ -194,7 +89,6 @@ export default function ProductsPage() {
     }
   }
 
-  
   const handleBulkDelete = async (productIds) => {
     const confirmed = window.confirm(`Удалить ${productIds.length} товаров?`)
     if (!confirmed) return
@@ -206,7 +100,6 @@ export default function ProductsPage() {
     }
   }
 
-  
   const exportToCsv = () => {
     const header = 'Название,Вес,Длина,Ширина,Высота,Объем'
     const rows = products.map(p =>
@@ -237,7 +130,7 @@ export default function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+                {sortedProducts.map((product) => (
                   <tr key={product.id}>
                     <td>{product.name}</td>
                     <td>{product.weight}</td>
@@ -279,6 +172,7 @@ export default function ProductsPage() {
             </button>
           )}
         </div>
+        {formError && <div className="alert danger">{formError}</div>}
         <form className="form-grid" onSubmit={handleSubmit}>
           <label className="form-field">
             <span>Название</span>
