@@ -2,14 +2,8 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, buildEndpoint } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatNumber, formatCurrency, isValidDate } from '../utils/format.js'
-import { PAGINATION, ERROR_MESSAGES } from '../constants.js'
+import { PAGINATION, ERROR_MESSAGES, MIN_DIMENSION, MIN_WEIGHT, MAX_DIMENSION, MAX_WEIGHT, CM_TO_M, emptyProduct } from '../constants.js'
 
-
-const MIN_WEIGHT = 0.01
-const MAX_WEIGHT = 10000
-const MIN_DIMENSION = 0.1
-const MAX_DIMENSION = 500
-const CM_TO_M = 100
 
 
 function calculateVolume(length, width, height) {

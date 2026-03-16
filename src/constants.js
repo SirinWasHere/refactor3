@@ -3,6 +3,12 @@ const TIMEOUT_MS = 5000
 const PAGE_SIZE = 10
 const DEBOUNCE_DELAY = 300
 
+export const MIN_WEIGHT = 0.01
+export const MAX_WEIGHT = 10000
+export const MIN_DIMENSION = 0.1
+export const MAX_DIMENSION = 500
+export const CM_TO_M = 100
+
 export const API_VERSION = 'v1'
 export const APP_NAME = 'Courier Management System'
 export const DEFAULT_LOCALE = 'ru-RU'
@@ -72,3 +78,30 @@ export const PAGINATION = {
   DEFAULT_SIZE: PAGE_SIZE,
   MAX_SIZE: 100
 }
+
+export const emptyProduct = {
+  name: '',
+  weight: '',
+  length: '',
+  width: '',
+  height: ''
+}
+
+
+export const emptyProductExtended = {
+  name: '',
+  weight: '',
+  length: '',
+  width: '',
+  height: '',
+  category: '',
+  sku: '',
+  description: ''
+}
+
+export const PRODUCT_CATEGORIES = [
+  { value: 'electronics', label: 'Электроника' },
+  { value: 'clothing', label: 'Одежда' },
+  { value: 'food', label: 'Продукты питания' },
+  { value: 'other', label: 'Другое' }
+]
