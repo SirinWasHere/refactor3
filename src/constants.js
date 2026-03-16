@@ -19,31 +19,12 @@ export const DELIVERY_STATUSES = [
   { value: 'cancelled', label: 'Отменена' }
 ]
 
-export const DELIVERY_STATUS_MAP = {
-  planned: 'Запланирована',
-  in_progress: 'В процессе',
-  completed: 'Завершена',
-  cancelled: 'Отменена'
-}
-
-export const LEGACY_STATUSES = [
-  { value: 'pending', label: 'Ожидает' },
-  { value: 'processing', label: 'Обрабатывается' },
-  { value: 'shipped', label: 'Отправлено' },
-  { value: 'delivered', label: 'Доставлено' }
-]
 
 export const USER_ROLES = [
   { value: 'admin', label: 'Администратор' },
   { value: 'manager', label: 'Менеджер' },
   { value: 'courier', label: 'Курьер' }
 ]
-
-export const USER_ROLE_MAP = {
-  admin: 'Администратор',
-  manager: 'Менеджер',
-  courier: 'Курьер'
-}
 
 export const FEATURES = {
   ENABLE_NOTIFICATIONS: false,

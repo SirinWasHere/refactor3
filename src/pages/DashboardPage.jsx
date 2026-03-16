@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatTimestamp, formatCurrency, calculateDateDiff } from '../utils/format.js'
-import { DELIVERY_STATUS_MAP, FEATURES, APP_NAME } from '../constants.js'
+import { FEATURES, APP_NAME } from '../constants.js'
 
 
 const REFRESH_INTERVAL = 30000

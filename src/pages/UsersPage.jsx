@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi, buildEndpoint } from '../api/endpoints.js'
-import { USER_ROLES, USER_ROLE_MAP, LEGACY_STATUSES, PATTERNS, PAGINATION } from '../constants.js'
+import { USER_ROLES, PATTERNS, PAGINATION } from '../constants.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatDateLegacy, formatCurrency, isValidDate } from '../utils/format.js'
 

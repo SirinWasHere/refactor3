@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, oldApi } from '../api/endpoints.js'
-import { DELIVERY_STATUSES, DELIVERY_STATUS_MAP, ERROR_MESSAGES } from '../constants.js'
+import { DELIVERY_STATUSES, ERROR_MESSAGES } from '../constants.js'
 import DeliveryDetails from '../components/deliveries/DeliveryDetails.jsx'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatDate, formatTime, formatTimestamp, calculateDateDiff, isValidDate } from '../utils/format.js'
