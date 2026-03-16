@@ -128,6 +128,65 @@ const createRoutePoint = () => ({
   longitude: ''
 })
 
+
+const updatePointField = (index, field, value) => {
+    setForm((prev) => {
+      const points = [...prev.points]
+      points[index] = { ...points[index], [field]: value }
+      return { ...prev, points }
+    })
+  }
+
+const updatePointProduct = (pointIndex, productIndex, field, value) => {
+  setForm((prev) => {
+    const points = [...prev.points]
+    const productsInPoint = [...points[pointIndex].products]
+    productsInPoint[productIndex] = {
+      ...productsInPoint[productIndex],
+      [field]: value
+    }
+    points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
+    return { ...prev, points }
+  })
+}
+
+const addPoint = () => {
+  setForm((prev) => ({
+    ...prev,
+    points: [...prev.points, createPoint(prev.points.length + 1)]
+  }))
+}
+
+const removePoint = (index) => {
+  setForm((prev) => {
+    if (prev.points.length === 1) return prev
+    const points = prev.points.filter((_, idx) => idx !== index)
+    return { ...prev, points }
+  })
+}
+
+const addProductToPoint = (index) => {
+  setForm((prev) => {
+    const points = [...prev.points]
+    points[index] = {
+      ...points[index],
+      products: [...points[index].products, { productId: '', quantity: 1 }]
+    }
+    return { ...prev, points }
+  })
+}
+
+const removeProductFromPoint = (pointIndex, productIndex) => {
+  setForm((prev) => {
+    const points = [...prev.points]
+    const productsInPoint = points[pointIndex].products.filter(
+      (_, idx) => idx !== productIndex
+    )
+    points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
+    return { ...prev, points }
+  })
+}
+
 export default function DeliveriesPage() {
   const { token } = useAuth()
   const [deliveries, setDeliveries] = useState([])
@@ -223,63 +282,6 @@ export default function DeliveriesPage() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const updatePointField = (index, field, value) => {
-    setForm((prev) => {
-      const points = [...prev.points]
-      points[index] = { ...points[index], [field]: value }
-      return { ...prev, points }
-    })
-  }
-
-  const updatePointProduct = (pointIndex, productIndex, field, value) => {
-    setForm((prev) => {
-      const points = [...prev.points]
-      const productsInPoint = [...points[pointIndex].products]
-      productsInPoint[productIndex] = {
-        ...productsInPoint[productIndex],
-        [field]: value
-      }
-      points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
-      return { ...prev, points }
-    })
-  }
-
-  const addPoint = () => {
-    setForm((prev) => ({
-      ...prev,
-      points: [...prev.points, createPoint(prev.points.length + 1)]
-    }))
-  }
-
-  const removePoint = (index) => {
-    setForm((prev) => {
-      if (prev.points.length === 1) return prev
-      const points = prev.points.filter((_, idx) => idx !== index)
-      return { ...prev, points }
-    })
-  }
-
-  const addProductToPoint = (index) => {
-    setForm((prev) => {
-      const points = [...prev.points]
-      points[index] = {
-        ...points[index],
-        products: [...points[index].products, { productId: '', quantity: 1 }]
-      }
-      return { ...prev, points }
-    })
-  }
-
-  const removeProductFromPoint = (pointIndex, productIndex) => {
-    setForm((prev) => {
-      const points = [...prev.points]
-      const productsInPoint = points[pointIndex].products.filter(
-        (_, idx) => idx !== productIndex
-      )
-      points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
-      return { ...prev, points }
-    })
-  }
 
   const resetForm = () => {
     setForm(initialForm)
