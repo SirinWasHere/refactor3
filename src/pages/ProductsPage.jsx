@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { api, buildEndpoint } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
 import { formatNumber, formatCurrency, isValidDate } from '../utils/format.js'
-import { PAGINATION, ERROR_MESSAGES, MIN_DIMENSION, MIN_WEIGHT, MAX_DIMENSION, MAX_WEIGHT, CM_TO_M, emptyProduct } from '../constants.js'
+import { PAGINATION, ERROR_MESSAGES, MIN_DIMENSION, MIN_WEIGHT, MAX_DIMENSION, MAX_WEIGHT, CM_TO_M, emptyProduct, PRODUCT_CATEGORIES} from '../constants.js'
 
 
 
@@ -43,34 +43,6 @@ function filterProducts(products, searchQuery, category) {
     return matchesSearch && matchesCategory
   })
 }
-
-const emptyProduct = {
-  name: '',
-  weight: '',
-  length: '',
-  width: '',
-  height: ''
-}
-
-
-const emptyProductExtended = {
-  name: '',
-  weight: '',
-  length: '',
-  width: '',
-  height: '',
-  category: '',
-  sku: '',
-  description: ''
-}
-
-
-const PRODUCT_CATEGORIES = [
-  { value: 'electronics', label: 'Электроника' },
-  { value: 'clothing', label: 'Одежда' },
-  { value: 'food', label: 'Продукты питания' },
-  { value: 'other', label: 'Другое' }
-]
 
 export default function ProductsPage() {
   const { token } = useAuth()
