@@ -1,4 +1,4 @@
-import { MIN_WEIGHT, MAX_WEIGHT, MIN_DIMENSION, MAX_DIMENSION, CM_TO_M } from '../constants'
+import { MIN_WEIGHT, MAX_WEIGHT, MIN_DIMENSION, MAX_DIMENSION, CM_TO_M } from '../../constants'
 
 export function calculateVolume(length, width, height) {
   return (length * width * height) / (CM_TO_M * CM_TO_M * CM_TO_M)

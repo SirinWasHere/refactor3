@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { api } from '../api/endpoints.js'
 import { useAuth } from '../state/AuthContext.jsx'
-import { useProductForm } from '../utils/useProductForm'
-import { useProductFilters } from '../utils/useProductFilters'
+import { useProductForm } from '../components/utils/UseProductForm.js'
+import { useProductFilters } from '../components/utils/UseProductFilters.js'
 import { PRODUCT_CATEGORIES } from '../constants'
 
 export default function ProductsPage() {

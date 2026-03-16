@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import { filterProducts, sortProducts } from '../utils/productHelpers'
+import { filterProducts, sortProducts } from './ProductHelper.js'
 
 export function useProductFilters(products) {
   const [searchQuery, setSearchQuery] = useState('')

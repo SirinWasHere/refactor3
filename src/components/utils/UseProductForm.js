@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { emptyProduct } from '../constants'
-import { validateProduct } from '../utils/productHelpers'
+import { emptyProduct } from '../../constants'
+import { validateProduct } from './ProductHelper.js'
 
 function mapProductToForm(product) {
   return {
