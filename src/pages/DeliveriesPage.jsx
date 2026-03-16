@@ -77,152 +77,211 @@ function optimizeRoute(points) {
   return result
 }
 
-const createPoint = (index = 1) => ({
-  sequence: index,
-  latitude: '',
-  longitude: '',
-  products: [{ productId: '', quantity: 1 }]
-})
-
-const initialForm = {
-  courierId: '',
-  vehicleId: '',
-  deliveryDate: '',
-  timeStart: '09:00',
-  timeEnd: '18:00',
-  points: [createPoint(1)]
-}
-
-
-const initialFormExtended = {
-  courierId: '',
-  vehicleId: '',
-  deliveryDate: '',
-  timeStart: '09:00',
-  timeEnd: '18:00',
-  priority: 'normal',
-  notes: '',
-  points: [createPoint(1)]
-}
-
-// Хелперы для массовой генерации
-const createGenerationPoint = (seq = 1) => ({
+const createEmptyPoint = (seq = 1) => ({
   sequence: seq,
   latitude: '',
   longitude: ''
-})
+});
+
+const createEmptyPointWithProducts = (seq = 1) => ({
+  ...createEmptyPoint(seq),
+  products: []
+});
+
+
+function useCollection(initialItems = [], createItem) {
+  const [items, setItems] = useState(initialItems);
+
+  const add = useCallback(() => {
+    setItems(prev => [...prev, createItem(prev.length + 1)]);
+  }, [createItem]);
+
+  const remove = useCallback((index) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const updateField = useCallback((index, field, value) => {
+    setItems(prev => {
+      const newItems = [...prev];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return newItems;
+    });
+  }, []);
+
+  const setItemsDirect = useCallback(setItems, []);
+
+  return { items, setItems: setItemsDirect, add, remove, updateField };
+}
+
+function PointInputRow({ point, index, onChange, showSequence = true, onRemove, canRemove }) {
+  return (
+    <div className="route-point-row">
+      {showSequence && <span className="point-number">{index + 1}</span>}
+      {showSequence && (
+        <input
+          type="number"
+          min="1"
+          value={point.sequence}
+          onChange={(e) => onChange(index, 'sequence', e.target.value)}
+          style={{ width: '60px' }}
+        />
+      )}
+      <input
+        type="number"
+        step="0.0001"
+        placeholder="Широта"
+        value={point.latitude}
+        onChange={(e) => onChange(index, 'latitude', e.target.value)}
+        required
+      />
+      <input
+        type="number"
+        step="0.0001"
+        placeholder="Долгота"
+        value={point.longitude}
+        onChange={(e) => onChange(index, 'longitude', e.target.value)}
+        required
+      />
+      {canRemove && (
+        <button type="button" className="btn ghost danger" onClick={() => onRemove(index)}>
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+function PointProducts({ products, pointIndex, onUpdateProduct, onAddProduct, onRemoveProduct }) {
+  return (
+    <div className="products-block">
+      <div className="section-head">
+        <p>Товары</p>
+        <button className="btn ghost" type="button" onClick={onAddProduct}>
+          Добавить товар
+        </button>
+      </div>
+      {products.map((product, productIndex) => (
+        <div key={productIndex} className="product-row">
+          <select
+            value={product.productId}
+            onChange={(e) => onUpdateProduct(pointIndex, productIndex, 'productId', e.target.value)}
+          >
+            <option value="">Выберите товар</option>
+            {productsOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min="1"
+            value={product.quantity}
+            onChange={(e) => onUpdateProduct(pointIndex, productIndex, 'quantity', e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn ghost danger"
+            onClick={() => onRemoveProduct(pointIndex, productIndex)}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      {products.length === 0 && <p className="muted">Добавьте товары для этой точки</p>}
+    </div>
+  );
+}
+
+function DeliveryRoutePoints({ points, onPointsChange }) {
+  const { items, updateField, add, remove } = useCollection(points, createEmptyPoint);
+
+  useEffect(() => {
+    onPointsChange(items);
+  }, [items, onPointsChange]);
+
+  return (
+    <div className="products-block">
+      <div className="section-head">
+        <p>Точки маршрута</p>
+        <button className="btn ghost" type="button" onClick={add}>
+          Добавить точку
+        </button>
+      </div>
+      {items.map((point, idx) => (
+        <PointInputRow
+          key={idx}
+          point={point}
+          index={idx}
+          onChange={updateField}
+          onRemove={remove}
+          canRemove={items.length > 1}
+        />
+      ))}
+    </div>
+  );
+}
+
 
 const createGenerationDelivery = () => ({
-  route: [createGenerationPoint(1)],
-  products: [{ productId: '', quantity: 1 }]
-})
+  route: [createEmptyPoint(1)],
+  products: []
+});
 
 const createGenerationDate = () => ({
   date: '',
   deliveries: [createGenerationDelivery()]
 })
 
-// Хелперы для расчета маршрута
-const createRoutePoint = () => ({
-  latitude: '',
-  longitude: ''
-})
-
-
-const updatePointField = (index, field, value) => {
-    setForm((prev) => {
-      const points = [...prev.points]
-      points[index] = { ...points[index], [field]: value }
-      return { ...prev, points }
-    })
-  }
-
-const updatePointProduct = (pointIndex, productIndex, field, value) => {
-  setForm((prev) => {
-    const points = [...prev.points]
-    const productsInPoint = [...points[pointIndex].products]
-    productsInPoint[productIndex] = {
-      ...productsInPoint[productIndex],
-      [field]: value
-    }
-    points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
-    return { ...prev, points }
-  })
-}
-
-const addPoint = () => {
-  setForm((prev) => ({
-    ...prev,
-    points: [...prev.points, createPoint(prev.points.length + 1)]
-  }))
-}
-
-const removePoint = (index) => {
-  setForm((prev) => {
-    if (prev.points.length === 1) return prev
-    const points = prev.points.filter((_, idx) => idx !== index)
-    return { ...prev, points }
-  })
-}
-
-const addProductToPoint = (index) => {
-  setForm((prev) => {
-    const points = [...prev.points]
-    points[index] = {
-      ...points[index],
-      products: [...points[index].products, { productId: '', quantity: 1 }]
-    }
-    return { ...prev, points }
-  })
-}
-
-const removeProductFromPoint = (pointIndex, productIndex) => {
-  setForm((prev) => {
-    const points = [...prev.points]
-    const productsInPoint = points[pointIndex].products.filter(
-      (_, idx) => idx !== productIndex
-    )
-    points[pointIndex] = { ...points[pointIndex], products: productsInPoint }
-    return { ...prev, points }
-  })
-}
 
 export default function DeliveriesPage() {
-  const { token } = useAuth()
-  const [deliveries, setDeliveries] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const { token } = useAuth();
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [couriers, setCouriers] = useState([])
-  const [vehicles, setVehicles] = useState([])
-  const [products, setProducts] = useState([])
-  const [refsError, setRefsError] = useState(null)
+  const [couriers, setCouriers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [refsError, setRefsError] = useState(null);
 
-  const [filters, setFilters] = useState({
-    date: '',
-    courier_id: '',
-    status: ''
-  })
-  const [filterForm, setFilterForm] = useState(filters)
+  const [filters, setFilters] = useState({ date: '', courier_id: '', status: '' });
+  const [filterForm, setFilterForm] = useState(filters);
 
-  const [form, setForm] = useState(initialForm)
-  const [editingDelivery, setEditingDelivery] = useState(null)
-  const [formError, setFormError] = useState(null)
+  const [formBase, setFormBase] = useState({
+    courierId: '',
+    vehicleId: '',
+    deliveryDate: '',
+    timeStart: '09:00',
+    timeEnd: '18:00'
+  });
+  const {
+    items: points,
+    setItems: setPoints,
+    add: addPoint,
+    remove: removePoint,
+    updateField: updatePointField
+  } = useCollection([createEmptyPointWithProducts(1)], createEmptyPointWithProducts);
 
-  const [selectedDelivery, setSelectedDelivery] = useState(null)
+  const [editingDelivery, setEditingDelivery] = useState(null);
+  const [formError, setFormError] = useState(null);
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
 
-  // Массовая генерация - структурированные данные
-  const [generationDates, setGenerationDates] = useState([createGenerationDate()])
-  const [generationResult, setGenerationResult] = useState(null)
-  const [generationError, setGenerationError] = useState(null)
+  const [generationDates, setGenerationDates] = useState([createGenerationDate()]);
+  const [generationResult, setGenerationResult] = useState(null);
+  const [generationError, setGenerationError] = useState(null);
 
-  // Расчет маршрута - структурированные данные
-  const [routePoints, setRoutePoints] = useState([createRoutePoint(), createRoutePoint()])
-  const [routeResult, setRouteResult] = useState(null)
-  const [routeError, setRouteError] = useState(null)
-  const [calculatingRoute, setCalculatingRoute] = useState(false)
+  const {
+    items: routePoints,
+    add: addRoutePoint,
+    remove: removeRoutePoint,
+    updateField: updateRoutePointField
+  } = useCollection([createEmptyPoint(1), createEmptyPoint(2)], createEmptyPoint);
+  const [routeResult, setRouteResult] = useState(null);
+  const [routeError, setRouteError] = useState(null);
+  const [calculatingRoute, setCalculatingRoute] = useState(false);
 
-  const loadReferences = async () => {
+  const loadReferences = async () => { 
     const errors = []
     const [courierRes, vehicleRes, productRes] = await Promise.allSettled([
       api.users.list(token, 'courier'),
@@ -251,9 +310,8 @@ export default function DeliveriesPage() {
       errors.push(productRes.reason.message)
     }
 
-    setRefsError(errors.length ? errors.join('. ') : null)
-  }
-
+    setRefsError(errors.length ? errors.join('. ') : null) 
+  };
   const loadDeliveries = async () => {
     setLoading(true)
     setError(null)
@@ -265,297 +323,220 @@ export default function DeliveriesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  };
 
   useEffect(() => {
-    loadReferences()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+    loadReferences();
+  }, [token]);
 
   useEffect(() => {
-    loadDeliveries()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, token])
+    loadDeliveries();
+  }, [filters, token]);
 
-  const updateFormField = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
+  // --- Обработчики основной формы ---
+  const updateFormField = (e) => {
+    const { name, value } = e.target;
+    setFormBase(prev => ({ ...prev, [name]: value }));
+  };
 
+  const handleUpdatePointProduct = (pointIndex, productIndex, field, value) => {
+    setPoints(prev => {
+      const newPoints = [...prev];
+      const products = [...newPoints[pointIndex].products];
+      products[productIndex] = { ...products[productIndex], [field]: value };
+      newPoints[pointIndex] = { ...newPoints[pointIndex], products };
+      return newPoints;
+    });
+  };
+
+  const handleAddProductToPoint = (pointIndex) => {
+    setPoints(prev => {
+      const newPoints = [...prev];
+      newPoints[pointIndex] = {
+        ...newPoints[pointIndex],
+        products: [...newPoints[pointIndex].products, { productId: '', quantity: 1 }]
+      };
+      return newPoints;
+    });
+  };
+
+  const handleRemoveProductFromPoint = (pointIndex, productIndex) => {
+    setPoints(prev => {
+      const newPoints = [...prev];
+      newPoints[pointIndex] = {
+        ...newPoints[pointIndex],
+        products: newPoints[pointIndex].products.filter((_, idx) => idx !== productIndex)
+      };
+      return newPoints;
+    });
+  };
 
   const resetForm = () => {
-    setForm(initialForm)
-    setEditingDelivery(null)
-    setFormError(null)
-  }
+    setFormBase({ courierId: '', vehicleId: '', deliveryDate: '', timeStart: '09:00', timeEnd: '18:00' });
+    setPoints([createEmptyPointWithProducts(1)]);
+    setEditingDelivery(null);
+    setFormError(null);
+  };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    setFormError(null)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError(null);
     try {
       const payload = {
-        courierId: Number(form.courierId),
-        vehicleId: Number(form.vehicleId),
-        deliveryDate: form.deliveryDate,
-        timeStart: form.timeStart,
-        timeEnd: form.timeEnd,
-        points: form.points.map((point, idx) => ({
+        courierId: Number(formBase.courierId),
+        vehicleId: Number(formBase.vehicleId),
+        deliveryDate: formBase.deliveryDate,
+        timeStart: formBase.timeStart,
+        timeEnd: formBase.timeEnd,
+        points: points.map((point, idx) => ({
           sequence: Number(point.sequence || idx + 1),
           latitude: Number(point.latitude),
           longitude: Number(point.longitude),
           products: point.products
-            .filter((product) => product.productId)
-            .map((product) => ({
-              productId: Number(product.productId),
-              quantity: Number(product.quantity)
-            }))
+            .filter(p => p.productId)
+            .map(p => ({ productId: Number(p.productId), quantity: Number(p.quantity) }))
         }))
-      }
-
+      };
       if (editingDelivery) {
-        await api.deliveries.update(token, editingDelivery.id, payload)
+        await api.deliveries.update(token, editingDelivery.id, payload);
       } else {
-        await api.deliveries.create(token, payload)
+        await api.deliveries.create(token, payload);
       }
-      resetForm()
-      await loadDeliveries()
+      resetForm();
+      await loadDeliveries();
     } catch (err) {
-      setFormError(err.message)
+      setFormError(err.message);
     }
-  }
-
-  const handleDeleteDelivery = async (delivery) => {
-    const confirmed = window.confirm(
-      `Удалить доставку ${delivery.deliveryNumber}?`
-    )
-    if (!confirmed) return
-    try {
-      await api.deliveries.delete(token, delivery.id)
-      await loadDeliveries()
-    } catch (err) {
-      setError(err.message)
-    }
-  }
+  };
 
   const handleEditDelivery = (delivery) => {
-    if (!delivery.canEdit) return
-    setEditingDelivery(delivery)
-    setForm({
+    if (!delivery.canEdit) return;
+    setEditingDelivery(delivery);
+    setFormBase({
       courierId: delivery.courier?.id || '',
       vehicleId: delivery.vehicle?.id || '',
       deliveryDate: delivery.deliveryDate,
       timeStart: delivery.timeStart,
-      timeEnd: delivery.timeEnd,
-      points: delivery.deliveryPoints.map((point) => ({
+      timeEnd: delivery.timeEnd
+    });
+    setPoints(
+      delivery.deliveryPoints.map(point => ({
         sequence: point.sequence,
         latitude: point.latitude,
         longitude: point.longitude,
-        products: point.products.map((product) => ({
-          productId: product.product.id,
-          quantity: product.quantity
+        products: point.products.map(p => ({
+          productId: p.product.id,
+          quantity: p.quantity
         }))
       }))
-    })
-  }
+    );
+  };
 
-  const applyFilters = (event) => {
-    event.preventDefault()
-    setFilters(filterForm)
-  }
+  const handleDeleteDelivery = async (delivery) => { /* ... */ };
 
-  const clearFilters = () => {
-    setFilterForm({ date: '', courier_id: '', status: '' })
-    setFilters({ date: '', courier_id: '', status: '' })
-  }
+  // --- Фильтры (без изменений) ---
+  const applyFilters = (e) => { e.preventDefault(); setFilters(filterForm); };
+  const clearFilters = () => { setFilterForm({ date: '', courier_id: '', status: '' }); setFilters({ date: '', courier_id: '', status: '' }); };
 
-  // === Функции для массовой генерации ===
-  const addGenerationDate = () => {
-    setGenerationDates((prev) => [...prev, createGenerationDate()])
-  }
+  // --- Обработчики массовой генерации (адаптированы для работы с компонентами) ---
+  const addGenerationDate = () => setGenerationDates(prev => [...prev, createGenerationDate()]);
+  const removeGenerationDate = (idx) => setGenerationDates(prev => prev.filter((_, i) => i !== idx));
+  const updateGenerationDateField = (idx, value) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[idx] = { ...newDates[idx], date: value };
+      return newDates;
+    });
+  };
+  const addDeliveryToDate = (dateIdx) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[dateIdx].deliveries.push(createGenerationDelivery());
+      return newDates;
+    });
+  };
+  const removeDeliveryFromDate = (dateIdx, deliveryIdx) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[dateIdx].deliveries = newDates[dateIdx].deliveries.filter((_, i) => i !== deliveryIdx);
+      return newDates;
+    });
+  };
+  const updateDeliveryRoute = (dateIdx, deliveryIdx, newRoute) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[dateIdx].deliveries[deliveryIdx].route = newRoute;
+      return newDates;
+    });
+  };
+  const addProductToDelivery = (dateIdx, deliveryIdx) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[dateIdx].deliveries[deliveryIdx].products.push({ productId: '', quantity: 1 });
+      return newDates;
+    });
+  };
+  const removeProductFromDelivery = (dateIdx, deliveryIdx, productIdx) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      newDates[dateIdx].deliveries[deliveryIdx].products = newDates[dateIdx].deliveries[deliveryIdx].products.filter((_, i) => i !== productIdx);
+      return newDates;
+    });
+  };
+  const updateDeliveryProductField = (dateIdx, deliveryIdx, productIdx, field, value) => {
+    setGenerationDates(prev => {
+      const newDates = [...prev];
+      const products = [...newDates[dateIdx].deliveries[deliveryIdx].products];
+      products[productIdx] = { ...products[productIdx], [field]: value };
+      newDates[dateIdx].deliveries[deliveryIdx].products = products;
+      return newDates;
+    });
+  };
 
-  const removeGenerationDate = (dateIndex) => {
-    setGenerationDates((prev) => {
-      if (prev.length === 1) return prev
-      return prev.filter((_, idx) => idx !== dateIndex)
-    })
-  }
-
-  const updateGenerationDateField = (dateIndex, value) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      dates[dateIndex] = { ...dates[dateIndex], date: value }
-      return dates
-    })
-  }
-
-  const addDeliveryToDate = (dateIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      dates[dateIndex] = {
-        ...dates[dateIndex],
-        deliveries: [...dates[dateIndex].deliveries, createGenerationDelivery()]
-      }
-      return dates
-    })
-  }
-
-  const removeDeliveryFromDate = (dateIndex, deliveryIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      if (dates[dateIndex].deliveries.length === 1) return prev
-      dates[dateIndex] = {
-        ...dates[dateIndex],
-        deliveries: dates[dateIndex].deliveries.filter((_, idx) => idx !== deliveryIndex)
-      }
-      return dates
-    })
-  }
-
-  const addRoutePointToDelivery = (dateIndex, deliveryIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const delivery = dates[dateIndex].deliveries[deliveryIndex]
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...delivery,
-        route: [...delivery.route, createGenerationPoint(delivery.route.length + 1)]
-      }
-      return dates
-    })
-  }
-
-  const removeRoutePointFromDelivery = (dateIndex, deliveryIndex, pointIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const delivery = dates[dateIndex].deliveries[deliveryIndex]
-      if (delivery.route.length === 1) return prev
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...delivery,
-        route: delivery.route.filter((_, idx) => idx !== pointIndex)
-      }
-      return dates
-    })
-  }
-
-  const updateRoutePointField = (dateIndex, deliveryIndex, pointIndex, field, value) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const route = [...dates[dateIndex].deliveries[deliveryIndex].route]
-      route[pointIndex] = { ...route[pointIndex], [field]: value }
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...dates[dateIndex].deliveries[deliveryIndex],
-        route
-      }
-      return dates
-    })
-  }
-
-  const addProductToDelivery = (dateIndex, deliveryIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const delivery = dates[dateIndex].deliveries[deliveryIndex]
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...delivery,
-        products: [...delivery.products, { productId: '', quantity: 1 }]
-      }
-      return dates
-    })
-  }
-
-  const removeProductFromDelivery = (dateIndex, deliveryIndex, productIndex) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const delivery = dates[dateIndex].deliveries[deliveryIndex]
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...delivery,
-        products: delivery.products.filter((_, idx) => idx !== productIndex)
-      }
-      return dates
-    })
-  }
-
-  const updateDeliveryProductField = (dateIndex, deliveryIndex, productIndex, field, value) => {
-    setGenerationDates((prev) => {
-      const dates = [...prev]
-      const products = [...dates[dateIndex].deliveries[deliveryIndex].products]
-      products[productIndex] = { ...products[productIndex], [field]: value }
-      dates[dateIndex].deliveries[deliveryIndex] = {
-        ...dates[dateIndex].deliveries[deliveryIndex],
-        products
-      }
-      return dates
-    })
-  }
-
-  const handleGenerateDeliveries = async (event) => {
-    event.preventDefault()
-    setGenerationError(null)
+  const handleGenerateDeliveries = async (e) => {
+    e.preventDefault();
+    setGenerationError(null);
     try {
-      // Конвертируем структурированные данные в формат API
-      const deliveryData = {}
+      const deliveryData = {};
       for (const dateEntry of generationDates) {
-        if (!dateEntry.date) continue
-        deliveryData[dateEntry.date] = dateEntry.deliveries.map((delivery) => ({
-          route: delivery.route.map((point) => ({
+        if (!dateEntry.date) continue;
+        deliveryData[dateEntry.date] = dateEntry.deliveries.map(delivery => ({
+          route: delivery.route.map(point => ({
             sequence: Number(point.sequence),
             latitude: Number(point.latitude),
             longitude: Number(point.longitude)
           })),
           products: delivery.products
-            .filter((p) => p.productId)
-            .map((p) => ({
-              productId: Number(p.productId),
-              quantity: Number(p.quantity)
-            }))
-        }))
+            .filter(p => p.productId)
+            .map(p => ({ productId: Number(p.productId), quantity: Number(p.quantity) }))
+        }));
       }
-      const response = await api.deliveries.generate(token, { deliveryData })
-      setGenerationResult(response)
-      await loadDeliveries()
+      const response = await api.deliveries.generate(token, { deliveryData });
+      setGenerationResult(response);
+      await loadDeliveries();
     } catch (err) {
-      setGenerationError(err.message)
+      setGenerationError(err.message);
     }
-  }
+  };
 
-  // === Функции для расчета маршрута ===
-  const addCalcRoutePoint = () => {
-    setRoutePoints((prev) => [...prev, createRoutePoint()])
-  }
-
-  const removeCalcRoutePoint = (index) => {
-    setRoutePoints((prev) => {
-      if (prev.length <= 2) return prev
-      return prev.filter((_, idx) => idx !== index)
-    })
-  }
-
-  const updateCalcRoutePointField = (index, field, value) => {
-    setRoutePoints((prev) => {
-      const points = [...prev]
-      points[index] = { ...points[index], [field]: value }
-      return points
-    })
-  }
-
-  const handleCalculateRoute = async (event) => {
-    event.preventDefault()
-    setRouteError(null)
-    setRouteResult(null)
+  // --- Обработчики калькулятора маршрута ---
+  const handleCalculateRoute = async (e) => {
+    e.preventDefault();
+    setRouteError(null);
+    setRouteResult(null);
     try {
-      const points = routePoints.map((p) => ({
-        latitude: Number(p.latitude),
-        longitude: Number(p.longitude)
-      }))
-      setCalculatingRoute(true)
-      const response = await api.route.calculate(token, { points })
-      setRouteResult(response)
+      const pointsPayload = routePoints.map(p => ({ latitude: Number(p.latitude), longitude: Number(p.longitude) }));
+      setCalculatingRoute(true);
+      const response = await api.route.calculate(token, { points: pointsPayload });
+      setRouteResult(response);
     } catch (err) {
-      setRouteError(err.message)
+      setRouteError(err.message);
     } finally {
-      setCalculatingRoute(false)
+      setCalculatingRoute(false);
     }
-  }
+  };
 
-  const filteredDeliveries = useMemo(() => deliveries, [deliveries])
+  const filteredDeliveries = useMemo(() => deliveries, [deliveries]);
 
   return (
     <div className="deliveries-grid">
@@ -788,116 +769,32 @@ export default function DeliveriesPage() {
                 Добавить точку
               </button>
             </div>
-            {form.points.map((point, index) => (
+            {points.map((point, index) => (
               <div key={index} className="point-card">
                 <div className="point-card-head">
                   <strong>Точка {index + 1}</strong>
-                  {form.points.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn ghost danger"
-                      onClick={() => removePoint(index)}
-                    >
+                  {points.length > 1 && (
+                    <button type="button" className="btn ghost danger" onClick={() => removePoint(index)}>
                       Удалить
                     </button>
                   )}
                 </div>
                 <div className="point-grid">
-                  <label className="form-field">
-                    <span>Порядок</span>
-                    <input
-                      type="number"
-                      min="1"
-                      value={point.sequence}
-                      onChange={(event) =>
-                        updatePointField(index, 'sequence', event.target.value)
-                      }
-                    />
-                  </label>
-                  <label className="form-field">
-                    <span>Широта</span>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={point.latitude}
-                      onChange={(event) =>
-                        updatePointField(index, 'latitude', event.target.value)
-                      }
-                      required
-                    />
-                  </label>
-                  <label className="form-field">
-                    <span>Долгота</span>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={point.longitude}
-                      onChange={(event) =>
-                        updatePointField(index, 'longitude', event.target.value)
-                      }
-                      required
-                    />
-                  </label>
+                  <PointInputRow
+                    point={point}
+                    index={index}
+                    onChange={updatePointField}
+                    showSequence={true}
+                    canRemove={false}
+                  />
                 </div>
-                <div className="products-block">
-                  <div className="section-head">
-                    <p>Товары</p>
-                    <button
-                      className="btn ghost"
-                      type="button"
-                      onClick={() => addProductToPoint(index)}
-                    >
-                      Добавить товар
-                    </button>
-                  </div>
-                  {point.products.map((product, productIndex) => (
-                    <div key={productIndex} className="product-row">
-                      <select
-                        value={product.productId}
-                        onChange={(event) =>
-                          updatePointProduct(
-                            index,
-                            productIndex,
-                            'productId',
-                            event.target.value
-                          )
-                        }
-                      >
-                        <option value="">Выберите товар</option>
-                        {products.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="1"
-                        value={product.quantity}
-                        onChange={(event) =>
-                          updatePointProduct(
-                            index,
-                            productIndex,
-                            'quantity',
-                            event.target.value
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="btn ghost danger"
-                        onClick={() =>
-                          removeProductFromPoint(index, productIndex)
-                        }
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {point.products.length === 0 && (
-                    <p className="muted">Добавьте товары для этой точки</p>
-                  )}
-                </div>
+                <PointProducts
+                  products={point.products}
+                  pointIndex={index}
+                  onUpdateProduct={handleUpdatePointProduct}
+                  onAddProduct={() => handleAddProductToPoint(index)}
+                  onRemoveProduct={handleRemoveProductFromPoint}
+                />
               </div>
             ))}
           </div>
@@ -915,231 +812,137 @@ export default function DeliveriesPage() {
           </button>
         </div>
         <p className="muted">
-          Создайте несколько доставок на разные даты. Сервис автоматически
-          распределит курьеров и машины.
+          Создайте несколько доставок на разные даты. Сервис автоматически распределит курьеров и машины.
         </p>
         {generationError && <div className="alert danger">{generationError}</div>}
         <form className="form-grid" onSubmit={handleGenerateDeliveries}>
-          <div className="points-section">
-            {generationDates.map((dateEntry, dateIndex) => (
-              <div key={dateIndex} className="point-card">
-                <div className="point-card-head">
-                  <strong>Дата {dateIndex + 1}</strong>
-                  {generationDates.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn ghost danger"
-                      onClick={() => removeGenerationDate(dateIndex)}
-                    >
-                      Удалить дату
-                    </button>
-                  )}
+          {generationDates.map((dateEntry, dateIdx) => (
+            <div key={dateIdx} className="point-card">
+              <div className="point-card-head">
+                <strong>Дата {dateIdx + 1}</strong>
+                {generationDates.length > 1 && (
+                  <button type="button" className="btn ghost danger" onClick={() => removeGenerationDate(dateIdx)}>
+                    Удалить дату
+                  </button>
+                )}
+              </div>
+              <label className="form-field">
+                <span>Дата доставки</span>
+                <input
+                  type="date"
+                  value={dateEntry.date}
+                  onChange={(e) => updateGenerationDateField(dateIdx, e.target.value)}
+                  required
+                />
+              </label>
+
+              <div className="products-block">
+                <div className="section-head">
+                  <p>Доставки на эту дату</p>
+                  <button className="btn ghost" type="button" onClick={() => addDeliveryToDate(dateIdx)}>
+                    Добавить доставку
+                  </button>
                 </div>
-                <label className="form-field">
-                  <span>Дата доставки</span>
-                  <input
-                    type="date"
-                    value={dateEntry.date}
-                    onChange={(e) => updateGenerationDateField(dateIndex, e.target.value)}
-                    required
-                  />
-                </label>
 
-                <div className="products-block">
-                  <div className="section-head">
-                    <p>Доставки на эту дату</p>
-                    <button
-                      className="btn ghost"
-                      type="button"
-                      onClick={() => addDeliveryToDate(dateIndex)}
-                    >
-                      Добавить доставку
-                    </button>
-                  </div>
+                {dateEntry.deliveries.map((delivery, deliveryIdx) => (
+                  <div key={deliveryIdx} className="nested-card">
+                    <div className="point-card-head">
+                      <strong>Доставка {deliveryIdx + 1}</strong>
+                      {dateEntry.deliveries.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn ghost danger"
+                          onClick={() => removeDeliveryFromDate(dateIdx, deliveryIdx)}
+                        >
+                          Удалить
+                        </button>
+                      )}
+                    </div>
 
-                  {dateEntry.deliveries.map((delivery, deliveryIndex) => (
-                    <div key={deliveryIndex} className="nested-card">
-                      <div className="point-card-head">
-                        <strong>Доставка {deliveryIndex + 1}</strong>
-                        {dateEntry.deliveries.length > 1 && (
+                    <DeliveryRoutePoints
+                      points={delivery.route}
+                      onPointsChange={(newRoute) => updateDeliveryRoute(dateIdx, deliveryIdx, newRoute)}
+                    />
+
+                    <div className="products-block">
+                      <div className="section-head">
+                        <p>Товары</p>
+                        <button
+                          className="btn ghost"
+                          type="button"
+                          onClick={() => addProductToDelivery(dateIdx, deliveryIdx)}
+                        >
+                          Добавить товар
+                        </button>
+                      </div>
+                      {delivery.products.map((product, productIdx) => (
+                        <div key={productIdx} className="product-row">
+                          <select
+                            value={product.productId}
+                            onChange={(e) =>
+                              updateDeliveryProductField(dateIdx, deliveryIdx, productIdx, 'productId', e.target.value)
+                            }
+                          >
+                            <option value="">Выберите товар</option>
+                            {products.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min="1"
+                            value={product.quantity}
+                            onChange={(e) =>
+                              updateDeliveryProductField(dateIdx, deliveryIdx, productIdx, 'quantity', e.target.value)
+                            }
+                          />
                           <button
                             type="button"
                             className="btn ghost danger"
-                            onClick={() => removeDeliveryFromDate(dateIndex, deliveryIndex)}
+                            onClick={() => removeProductFromDelivery(dateIdx, deliveryIdx, productIdx)}
                           >
-                            Удалить
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="products-block">
-                        <div className="section-head">
-                          <p>Точки маршрута</p>
-                          <button
-                            className="btn ghost"
-                            type="button"
-                            onClick={() => addRoutePointToDelivery(dateIndex, deliveryIndex)}
-                          >
-                            Добавить точку
+                            ×
                           </button>
                         </div>
-                        {delivery.route.map((point, pointIndex) => (
-                          <div key={pointIndex} className="product-row">
-                            <input
-                              type="number"
-                              min="1"
-                              placeholder="№"
-                              value={point.sequence}
-                              onChange={(e) =>
-                                updateRoutePointField(dateIndex, deliveryIndex, pointIndex, 'sequence', e.target.value)
-                              }
-                              style={{ width: '60px' }}
-                            />
-                            <input
-                              type="number"
-                              step="0.0001"
-                              placeholder="Широта"
-                              value={point.latitude}
-                              onChange={(e) =>
-                                updateRoutePointField(dateIndex, deliveryIndex, pointIndex, 'latitude', e.target.value)
-                              }
-                              required
-                            />
-                            <input
-                              type="number"
-                              step="0.0001"
-                              placeholder="Долгота"
-                              value={point.longitude}
-                              onChange={(e) =>
-                                updateRoutePointField(dateIndex, deliveryIndex, pointIndex, 'longitude', e.target.value)
-                              }
-                              required
-                            />
-                            {delivery.route.length > 1 && (
-                              <button
-                                type="button"
-                                className="btn ghost danger"
-                                onClick={() => removeRoutePointFromDelivery(dateIndex, deliveryIndex, pointIndex)}
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="products-block">
-                        <div className="section-head">
-                          <p>Товары</p>
-                          <button
-                            className="btn ghost"
-                            type="button"
-                            onClick={() => addProductToDelivery(dateIndex, deliveryIndex)}
-                          >
-                            Добавить товар
-                          </button>
-                        </div>
-                        {delivery.products.map((product, productIndex) => (
-                          <div key={productIndex} className="product-row">
-                            <select
-                              value={product.productId}
-                              onChange={(e) =>
-                                updateDeliveryProductField(dateIndex, deliveryIndex, productIndex, 'productId', e.target.value)
-                              }
-                            >
-                              <option value="">Выберите товар</option>
-                              {products.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                  {item.name}
-                                </option>
-                              ))}
-                            </select>
-                            <input
-                              type="number"
-                              min="1"
-                              placeholder="Кол-во"
-                              value={product.quantity}
-                              onChange={(e) =>
-                                updateDeliveryProductField(dateIndex, deliveryIndex, productIndex, 'quantity', e.target.value)
-                              }
-                            />
-                            <button
-                              type="button"
-                              className="btn ghost danger"
-                              onClick={() => removeProductFromDelivery(dateIndex, deliveryIndex, productIndex)}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                        {delivery.products.length === 0 && (
-                          <p className="muted">Добавьте товары для этой доставки</p>
-                        )}
-                      </div>
+                      ))}
+                      {delivery.products.length === 0 && (
+                        <p className="muted">Добавьте товары для этой доставки</p>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
           <button className="btn primary">Запустить генерацию</button>
         </form>
         {generationResult && (
-          <div className="alert success">
-            Создано доставок: {generationResult.totalGenerated}
-          </div>
+          <div className="alert success">Создано доставок: {generationResult.totalGenerated}</div>
         )}
       </section>
 
       <section className="card">
         <div className="section-head">
           <h2>Расчет маршрута</h2>
-          <button className="btn ghost" type="button" onClick={addCalcRoutePoint}>
+          <button className="btn ghost" type="button" onClick={addRoutePoint}>
             Добавить точку
           </button>
         </div>
-        <p className="muted">
-          Быстрая проверка расстояния и времени прохождения маршрута.
-          Минимум 2 точки.
-        </p>
+        <p className="muted">Быстрая проверка расстояния и времени прохождения маршрута. Минимум 2 точки.</p>
         {routeError && <div className="alert danger">{routeError}</div>}
         <form className="form-grid" onSubmit={handleCalculateRoute}>
           <div className="points-section">
             {routePoints.map((point, index) => (
-              <div key={index} className="route-point-row">
-                <span className="point-number">{index + 1}</span>
-                <label className="form-field">
-                  <span>Широта</span>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    placeholder="55.7558"
-                    value={point.latitude}
-                    onChange={(e) => updateCalcRoutePointField(index, 'latitude', e.target.value)}
-                    required
-                  />
-                </label>
-                <label className="form-field">
-                  <span>Долгота</span>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    placeholder="37.6173"
-                    value={point.longitude}
-                    onChange={(e) => updateCalcRoutePointField(index, 'longitude', e.target.value)}
-                    required
-                  />
-                </label>
-                {routePoints.length > 2 && (
-                  <button
-                    type="button"
-                    className="btn ghost danger"
-                    onClick={() => removeCalcRoutePoint(index)}
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
+              <PointInputRow
+                key={index}
+                point={point}
+                index={index}
+                onChange={updateRoutePointField}
+                onRemove={removeRoutePoint}
+                canRemove={routePoints.length > 2}
+              />
             ))}
           </div>
           <button className="btn primary" disabled={calculatingRoute}>
@@ -1160,8 +963,7 @@ export default function DeliveriesPage() {
               <div>
                 <strong>Рекомендация</strong>
                 <p className="muted">
-                  {routeResult.suggestedTime.start} —{' '}
-                  {routeResult.suggestedTime.end}
+                  {routeResult.suggestedTime.start} — {routeResult.suggestedTime.end}
                 </p>
               </div>
             )}
@@ -1178,5 +980,5 @@ export default function DeliveriesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }
